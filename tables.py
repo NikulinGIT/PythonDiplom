@@ -159,10 +159,28 @@ class MainWindow(QMainWindow):
         self.update_button= QPushButton("Загрузить таблицу")
         self.update_button.clicked.connect(self.update_current_table)
 
+        self.upload_button= QPushButton("Очистить таблицу ручного ввода")
+        self.upload_button.clicked.connect(self.clear_current_table)
+
+        self.delete_button= QPushButton("Удалить таблицу")
+        self.delete_button.clicked.connect(self.delete_current_table)
+
         buttom_layout.addWidget(self.save_button)
         buttom_layout.addWidget(self.update_button)
+        buttom_layout.addWidget(self.upload_button)
+        buttom_layout.addWidget(self.delete_button)
         self.layout.addLayout(buttom_layout)
+    def clear_current_table(self):
+        conn = sqlite3.connect('Device_parametres.db')
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS hand_devices;")
+        conn.commit()
+        conn.close()
 
+    def delete_current_table(self):
+        current_index = self.tabs.currentIndex()
+        if current_index != -1:
+            self.tabs.removeTab(current_index)
     def add_scan_tab(self):
         conn = sqlite3.connect('Device_parametres.db')
         cursor = conn.cursor()
@@ -245,7 +263,35 @@ class MainWindow(QMainWindow):
                 table_ports.insertRow(row_position)
         self.tab_count += 1
         self.tabs.addTab(widget_ports, f"Port")
+        try:
+            cursor.execute('SELECT * FROM hand_devices')
+            main_devices = cursor.fetchall()
 
+            list_param = []
+            rows = len(main_devices)
+            table_devices = TableWidget(rows, 4)
+            table_devices.setHorizontalHeaderLabels(["Primary key", "Name", "System", "Activity"])
+
+            widget_devices = QWidget()
+            layout = QVBoxLayout(widget_devices)
+            layout.addWidget(table_devices)
+            row_position = table_devices.rowCount()
+            i = 0
+            first_elements_main_devices = [item[0] for item in main_devices]
+
+            for text in main_devices:
+                table_devices.setItem(i, 0, QTableWidgetItem(str(text[0])))
+                table_devices.setItem(i, 1, QTableWidgetItem(text[1]))
+                table_devices.setItem(i, 2, QTableWidgetItem(text[2]))
+                table_devices.setItem(i, 3, QTableWidgetItem(str(text[3])))
+                if i < row_position:
+                    i = i + 1
+                else:
+                    row_position = table_devices.rowCount()
+                    table_devices.insertRow(row_position)
+            self.tab_count += 1
+            self.tabs.addTab(widget_devices, f"hand_devices")
+        except:print('hand_device is empty')
     def update_current_table(self):
         path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для загрузки", "", "CSV Files (*.csv)")
         if path:

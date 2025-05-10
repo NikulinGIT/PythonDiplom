@@ -6,8 +6,8 @@ from PyQt5.QtGui import QPixmap, QPen, QBrush
 from PyQt5.QtCore import QLineF, Qt
 from PyQt5.QtWidgets import (QMenu, QAction,QGraphicsView, QGraphicsRectItem, QApplication,QGraphicsPixmapItem)
 import requests
-
-
+import sqlite3
+import os
 class FramedImage(QGraphicsItemGroup):
     def __init__(self, pixmap_path, label_text):
         super().__init__()
@@ -25,7 +25,8 @@ class FramedImage(QGraphicsItemGroup):
         self.addToGroup(self.image)
 
         # Подпись
-        self.label = QGraphicsTextItem(label_text)
+        label_eth_text, ok = QInputDialog.getText(None, 'Переименование', 'Введите имя:', text=label_text)
+        self.label = QGraphicsTextItem(label_eth_text)
         self.label.setDefaultTextColor(Qt.black)
         self.label.setPos(20, 72)
         self.addToGroup(self.label)
@@ -35,6 +36,31 @@ class FramedImage(QGraphicsItemGroup):
         self.setFlag(self.ItemSendsGeometryChanges)
         self.line_update_callback = None
 
+        conn = sqlite3.connect('Device_parametres.db')
+        cursor = conn.cursor()
+        conn.execute("PRAGMA foreign_keys = ON")
+        # Создаем основную таблицу devices
+        cursor.execute('''
+                            CREATE TABLE IF NOT EXISTS hand_devices (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                name TEXT NOT NULL unique,
+                                System TEXT,
+                                Activity INTEGER
+                            )
+                            ''')
+
+        filename = os.path.basename(pixmap_path)
+        filename_dict = {
+            "computer.png": "Windows",
+            "phone.png": 'Android',
+            "other.png": "Linux",
+            "wifi.png": "routerOS"
+        }
+        try:cursor.execute("INSERT INTO hand_devices (name, System, Activity) VALUES (?, ?, ?)", (label_eth_text, filename_dict[filename], 0))
+        except:pass
+
+        conn.commit()
+        conn.close()
         # Начальные состояния флажков
         self.List_flag_option = []
     def contextMenuEvent(self, event):
@@ -196,7 +222,14 @@ class FramedImage(QGraphicsItemGroup):
                         text, ok = QInputDialog.getText(None, 'Переименование', 'Введите новое имя:',
                                                         text=item.toPlainText())
                         if ok:
+                            old_name=item.toPlainText()
                             item.setPlainText(text)
+                            conn = sqlite3.connect('Device_parametres.db')
+                            cursor = conn.cursor()
+                            conn.execute("PRAGMA foreign_keys = ON")
+                            cursor.execute("UPDATE hand_devices SET name = ? WHERE name = ?", (text, old_name))
+                            conn.commit()
+                            conn.close()
         except:pass
 
     def make_gateway(self):
@@ -228,14 +261,21 @@ class FramedImage(QGraphicsItemGroup):
         view = QApplication.focusWidget()
         if isinstance(view, QGraphicsView):
             scene = view.scene()
-            active_item = scene.focusItem()  # элемент с фокусом
-            scene.removeItem(active_item)
-
-    def itemChange(self, change, value):
-        if change == self.ItemPositionChange and self.line_update_callback:
-            self.line_update_callback()
-        return super().itemChange(change, value)
-
+            delete_item = scene.focusItem()
+            # элемент с фокусом
+            try:
+               active_item = scene.selectedItems()
+               items = active_item[0].childItems()
+               for item in items:
+                   if isinstance(item, QGraphicsTextItem):
+                      old_name = item.toPlainText()
+                      conn = sqlite3.connect('Device_parametres.db')
+                      cursor = conn.cursor()
+                      cursor.execute("DELETE FROM hand_devices WHERE name = ?", (old_name,))
+                      conn.commit()
+                      conn.close()
+            except:print('error database')
+            scene.removeItem(delete_item)
 
 
 class LineConnector(QGraphicsLineItem):

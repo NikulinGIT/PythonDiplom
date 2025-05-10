@@ -8,7 +8,7 @@ class NetworkScanner:
     def __init__(self): #ускоренное сканирование , top_ports=1000
         self.scan_results = None
         self.network_graph = None
-        self.save_mode = False
+        self.save_mode = True
     def scan_network_fast(self):
         hostname = socket.gethostname()
         ip_address = socket.gethostbyname(hostname)

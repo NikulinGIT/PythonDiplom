@@ -14,6 +14,7 @@ import sqlite3
 import  NetworkScanner as ns
 import fast_buttons as fb
 import tables
+import subprocess
 class Work_space(QWidget):
     def __init__(self):
         super().__init__()
@@ -26,7 +27,7 @@ class Work_space(QWidget):
 
         layout.addWidget(self.tab_widget)  # собираем Widget в контейнер
         buttom_layout = QHBoxLayout(self)  # кнопка "Быстрое сканирование оборудования"
-        update_button = QPushButton("Полное сканирование оборудования")  # кнопка "Полное сканирование оборудования"
+        update_button = QPushButton("Архив оборудования")  # кнопка "Полное сканирование оборудования"
         update_button.setFixedSize(250, 20)
         update_button.clicked.connect(self.test_update_icon_image)
 
@@ -151,7 +152,8 @@ class Work_space(QWidget):
             system_icon = {
                 "Windows": f"{current_directory}\\units\\computer.png",
                 "Android": f"{current_directory}\\units\\phone.png",
-                "Linux": f"{current_directory}\\units\\other.png"
+                "Linux": f"{current_directory}\\units\\other.png",
+                "routerOS": f"{current_directory}\\units\\wifi.png"
             }
             rez_scan = ns.NetworkScanner()
             rez_scan.scan_network_fast()
@@ -180,17 +182,40 @@ class Work_space(QWidget):
 
     '''добавить устроройство '''
     def test_update_icon_image(self):
+      try:
+        current_file = os.path.realpath(__file__)
+        current_directory = os.path.dirname(current_file)
+        system_icon = {
+            "Windows": f"{current_directory}\\units\\computer.png",
+            "Android": f"{current_directory}\\units\\phone.png",
+            "Linux": f"{current_directory}\\units\\other.png",
+            "routerOS": f"{current_directory}\\units\\wifi.png"
+        }
 
-           current_file = os.path.realpath(__file__)
-           current_directory = os.path.dirname(current_file)
-           data = [
-              (f"{current_directory}\\units\\wifi.png", "Модуль 1", (10, 10)),
-              (f"{current_directory}\\units\\computer.png", "Модуль 2", (30, 20)),
-              (f"{current_directory}\\units\\other.png", "Модуль 3", (20, 35)),
-              (f"{current_directory}\\units\\phone.png", "Модуль 4", (20, 35)),
-           ]
-           for i in data:
-              self.add_icon_image(i[0], i[1], i[2], False)
+        data = []
+        self.position = 10
+        conn = sqlite3.connect('Device_parametres.db')
+        cursor = conn.cursor()
+        data = []
+        try:
+            cursor.execute('SELECT * FROM hand_devices')
+            cap_devices = cursor.fetchall()
+            list_param = []
+            # Выводим результат
+            for text in cap_devices:
+                name_ip = text[1]
+                addr_icon = system_icon[text[2]]
+                list_param = (addr_icon, name_ip, (self.position, self.position))
+                self.position = self.position + 10
+                print(list_param)
+                data.append(list_param)
+            print(data)
+            for i in data:
+                self.add_icon_image(i[0], i[1], i[2], False)
+        except:
+            print('hand_devices is empty')
+      except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить вкладку")
+
 
     '''добавить устроройство '''
     def add_icon_image(self,filename,name,pos,act):
@@ -228,7 +253,7 @@ class Work_space(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self,NetworkScanner_class_instance):
         super().__init__()
-        self.setWindowTitle("Мое приложение")
+        self.setWindowTitle("IAdmin")
         self.resize(1000, 800)
         self.NetworkScanner=NetworkScanner_class_instance
         # Центральный виджет и layout
@@ -272,6 +297,11 @@ class MainWindow(QMainWindow):
 
         nmap = menubar.addMenu("Nmap")
         nmap_type_scan=nmap.addMenu("Тип сканирования Nmap")
+
+        activ_console = menubar.addMenu("Консоль")
+        activ_console_run = QAction("Запуск консоли", self)
+        activ_console_run.triggered.connect(lambda: subprocess.Popen('start cmd.exe /k echo Привет из Python!', shell=True))
+        activ_console.addAction(activ_console_run)
 
         # Добавим ещё одно меню — например, "Справка"
         help_menu = menubar.addMenu("Справка")
