@@ -11,7 +11,7 @@ import unittest
 from PyQt5.QtWidgets import QApplication, QTableWidget
 import csv
 import pandas as pd
-
+import xlsxwriter
 
 app = QApplication([])  # Обязателен для создания виджетов в тестах
 
@@ -317,6 +317,36 @@ class MainWindow(QMainWindow):
           filename = os.path.basename(path)
           self.tabs.addTab(widget, filename)
     def save_current_table(self):
+        # Открытие диалогового окна для выбора места сохранения
+        current_widget = self.tabs.currentWidget()
+        if not current_widget:
+            return
+
+        table = current_widget.findChild(QTableWidget)
+        if not table:
+            return
+        file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить файл", "", "Excel Files (*.xlsx)")
+        if not file_name:
+            return
+
+        # Создание Excel-файла
+        workbook = xlsxwriter.Workbook(file_name)
+        worksheet = workbook.add_worksheet()
+
+        # Запись заголовков
+        for col in range(table.columnCount()):
+            worksheet.write(0, col, table.horizontalHeaderItem(col).text())
+
+        # Запись данных таблицы
+        for row in range(table.rowCount()):
+            for col in range(table.columnCount()):
+                item = table.item(row, col)
+                if item:
+                    worksheet.write(row + 1, col, item.text())
+
+        workbook.close()
+        print(f"Файл сохранен как {file_name}")
+        '''
         current_widget = self.tabs.currentWidget()
         if not current_widget:
             return
@@ -336,6 +366,7 @@ class MainWindow(QMainWindow):
                     row_data = [table.item(row, col).text() if table.item(row, col) else ""
                                 for col in range(table.columnCount())]
                     writer.writerow(row_data)
+        '''
     def add_new_tab(self):
         table = TableWidget(4, 4)
         widget = QWidget()
