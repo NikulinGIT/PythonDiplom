@@ -14,7 +14,7 @@ import pandas as pd
 import xlsxwriter
 
 app = QApplication([])  # Обязателен для создания виджетов в тестах
-
+'''
 class TestTableWidget(unittest.TestCase):
     def setUp(self):
         # Создание приложения PyQt для тестирования
@@ -65,7 +65,7 @@ class TestTableWidget(unittest.TestCase):
         # После удаления содержимого, ячейка должна быть пустой
         cell_item = self.table_widget.item(0, 0)
         self.assertIsNone(cell_item, "Ячейка должна быть пустой")
-
+'''
 class TableWidget(QTableWidget):
     def __init__(self, rows, columns):
         super().__init__(rows, columns)

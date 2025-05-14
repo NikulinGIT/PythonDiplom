@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QMenu, QAction, QMessageBox,
-    QTextEdit, QVBoxLayout, QSplitter, QTabWidget, QHBoxLayout, QFileDialog,QInputDialog,
-    QGraphicsView, QGraphicsScene, QGraphicsRectItem, QPushButton, QApplication,QGraphicsPixmapItem,QGraphicsEllipseItem, QSpacerItem, QSizePolicy
+    QVBoxLayout, QSplitter, QTabWidget, QHBoxLayout, QFileDialog,QInputDialog,
+    QGraphicsView, QGraphicsScene, QGraphicsRectItem, QPushButton, QApplication,QGraphicsPixmapItem,QSpacerItem, QSizePolicy
     )
 import console
 from PyQt5.QtCore import Qt
@@ -15,6 +15,10 @@ import  NetworkScanner as ns
 import fast_buttons as fb
 import tables
 import subprocess
+import unittest
+import test
+
+
 class Work_space(QWidget):
     def __init__(self):
         super().__init__()
@@ -29,14 +33,20 @@ class Work_space(QWidget):
         buttom_layout = QHBoxLayout(self)  # кнопка "Быстрое сканирование оборудования"
         update_button = QPushButton("Архив оборудования")  # кнопка "Полное сканирование оборудования"
         update_button.setFixedSize(250, 20)
-        update_button.clicked.connect(self.test_update_icon_image)
+        update_button.clicked.connect(self.archive_icon_image)
 
         fast_button = QPushButton("Быстрое сканирование оборудования")  # кнопка "Полное сканирование оборудования"
         fast_button.setFixedSize(250, 20)
         fast_button.clicked.connect(self.update_icon_image)
 
+        test_button = QPushButton("Тестирование сканирование оборудования")  # кнопка "Полное сканирование оборудования"
+        test_button.setFixedSize(250, 20)
+        test_button.clicked.connect(lambda : self.test_update_icon_image())
+
         buttom_layout.addWidget(fast_button)
+        buttom_layout.addWidget(test_button)
         buttom_layout.addWidget(update_button)
+
         layout.addLayout(buttom_layout)  # Потом кнопки в строку
         self.setLayout(layout)
 
@@ -180,8 +190,58 @@ class Work_space(QWidget):
                 self.add_icon_image(i[0], i[1], i[2], False)
         except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить вкладку")
 
-    '''добавить устроройство '''
+    def num_pixmap(self):
+        """Проверка, что таблица была создана с правильными размерами"""
+        current_widget = self.tab_widget.currentWidget()
+        # Найдём QGraphicsView внутри текущей вкладки
+        graphics_view = current_widget.findChild(QGraphicsView)
+        i = 0
+        current_scene = graphics_view.scene()
+        items = current_scene.items()
+        return len(items)
     def test_update_icon_image(self):
+        current_file = os.path.realpath(__file__)
+        current_directory = os.path.dirname(current_file)
+        data = [
+            (f"{current_directory}\\units\\wifi.png", "Модуль 1", (10, 10)),
+            (f"{current_directory}\\units\\computer.png", "Модуль 2", (30, 20)),
+            (f"{current_directory}\\units\\other.png", "Модуль 3", (20, 35)),
+            (f"{current_directory}\\units\\phone.png", "Модуль 4", (20, 35)),
+        ]
+        for i in data:
+            self.add_icon_image(i[0], i[1], i[2], False)
+
+        current_widget = self.tab_widget.currentWidget()
+        graphics_view = current_widget.findChild(QGraphicsView)
+        i = 0
+        if graphics_view:
+            current_scene = graphics_view.scene()
+            items = current_scene.items()
+            for item in items:
+                if isinstance(item, QGraphicsPixmapItem):
+                    image = item.pixmap()
+                    this_image = image.toImage()
+                    format = this_image.format()
+                    if format: i = i + 1
+            # Создаём и настраиваем тест
+
+            # Создаём и настраиваем тест
+            tst = test.GraphicsTest(methodName='test_graphics_item_count')
+            tst.num_img = i  # <-- передаём сцену вручную
+
+            suite = unittest.TestSuite()
+            suite.addTest(tst)
+
+            runner = unittest.TextTestRunner(verbosity=2)
+            result = runner.run(suite)
+
+            if result.wasSuccessful():
+               print("✅ Успешно: на сцене 4 изображения")
+            else:
+               print("❌ Ошибка: тест провален")
+
+    '''добавить устроройство '''
+    def archive_icon_image(self):
       try:
         current_file = os.path.realpath(__file__)
         current_directory = os.path.dirname(current_file)
@@ -328,7 +388,6 @@ class MainWindow(QMainWindow):
         self.nmap_type_scan_without_saving.setText("✓ Запуск Nmap без сохранения состояния")
     def show_about(self):
         QMessageBox.information(self, "О программе", "Пример меню-бара на PyQt.")
-
 
 # Запуск
 app = QApplication(sys.argv)
