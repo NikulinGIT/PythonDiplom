@@ -30,6 +30,27 @@ class Work_space(QWidget):
         self.tab_counter = 1  # Счётчик вкладок
 
         layout.addWidget(self.tab_widget)  # собираем Widget в контейнер
+        buttom_plus = QPushButton()
+        buttom_plus.setIcon(QIcon("files/plus.png"))
+        buttom_plus.setIconSize(buttom_plus.sizeHint())  # подгоняет размер иконки под кнопку
+        buttom_plus.setFixedSize(50, 50)  # зафиксировать размер кнопки
+
+        buttom_minus = QPushButton()
+        buttom_minus.setIcon(QIcon("files/minus.png"))
+        buttom_minus.setIconSize(buttom_minus.sizeHint())  # подгоняет размер иконки под кнопку
+        buttom_minus.setFixedSize(50, 50)  # зафиксировать размер кнопки
+
+        buttom_plus.clicked.connect(self.zoom_in)
+        buttom_minus.clicked.connect(self.zoom_out)
+
+        # Layout для кнопок
+
+        button_scale_layout = QHBoxLayout()
+        button_scale_layout.addWidget(buttom_plus)
+        button_scale_layout.addWidget(buttom_minus)
+        button_scale_layout.addSpacerItem(QSpacerItem(50, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        layout.addLayout(button_scale_layout)
+
         buttom_layout = QHBoxLayout(self)  # кнопка "Быстрое сканирование оборудования"
         update_button = QPushButton("Архив оборудования")  # кнопка "Полное сканирование оборудования"
         update_button.setFixedSize(250, 20)
@@ -109,42 +130,41 @@ class Work_space(QWidget):
             filename, _ = QFileDialog.getOpenFileName(
                 None, "Выбрать файл", "", "Все файлы (*);;Текстовые файлы (*.txt)"
             )
+
             self.background  = QGraphicsPixmapItem(QPixmap(filename))
             self.background .setZValue(-1)
             current_scene.addItem(self.background )
 
-            # Кнопка для изменения масштаба
-            buttom_plus = QPushButton()
-            buttom_plus.setIcon(QIcon("files/plus.png"))
-            buttom_plus.setIconSize(buttom_plus.sizeHint())  # подгоняет размер иконки под кнопку
-            buttom_plus.setFixedSize(50, 50)  # зафиксировать размер кнопки
 
-            buttom_minus = QPushButton()
-            buttom_minus.setIcon(QIcon("files/minus.png"))
-            buttom_minus.setIconSize(buttom_minus.sizeHint())  # подгоняет размер иконки под кнопку
-            buttom_minus.setFixedSize(50, 50)  # зафиксировать размер кнопки
-
-            buttom_plus.clicked.connect(self.zoom_in)
-            buttom_minus.clicked.connect(self.zoom_out)
-
-            # Layout для кнопок
-
-            button_scale_layout = QHBoxLayout()
-            button_scale_layout.addWidget(buttom_plus)
-            button_scale_layout.addWidget(buttom_minus)
-            button_scale_layout.addSpacerItem(QSpacerItem(50, 0, QSizePolicy.Expanding, QSizePolicy.Minimum))
-            self.tab_layout.addLayout(button_scale_layout)
       except:print('error')
 
     def zoom_in(self):
-        current_scale = self.background.scale()
-        new_scale = current_scale * 1.1
-        self.background.setScale(new_scale)
+       try:
+         current_widget = self.tab_widget.currentWidget()
+         # Найдём QGraphicsView внутри текущей вкладки
+         graphics_view = current_widget.findChild(QGraphicsView)
+         if graphics_view:
+            current_scene = graphics_view.scene()
+            items = current_scene.items(Qt.AscendingOrder)
+            background_item = items[-1] if items else None
+            current_scale = background_item.scale()
+            new_scale = current_scale * 1.1
+            background_item.setScale(new_scale)
+       except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить фоновое изображение")
 
     def zoom_out(self):
-        current_scale = self.background.scale()
-        new_scale = current_scale / 1.1
-        self.background.setScale(new_scale)
+       try:
+         current_widget = self.tab_widget.currentWidget()
+         # Найдём QGraphicsView внутри текущей вкладки
+         graphics_view = current_widget.findChild(QGraphicsView)
+         if graphics_view:
+            current_scene = graphics_view.scene()
+            items = current_scene.items(Qt.AscendingOrder)
+            background_item = items[-1] if items else None
+            current_scale = background_item.scale()
+            new_scale = current_scale / 1.1
+            background_item.setScale(new_scale)
+       except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить фоновое изображение")
 
     def change_image(self):
         # Изменить картинку (предположим, загрузка нового изображения)
@@ -190,15 +210,6 @@ class Work_space(QWidget):
                 self.add_icon_image(i[0], i[1], i[2], False)
         except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить вкладку")
 
-    def num_pixmap(self):
-        """Проверка, что таблица была создана с правильными размерами"""
-        current_widget = self.tab_widget.currentWidget()
-        # Найдём QGraphicsView внутри текущей вкладки
-        graphics_view = current_widget.findChild(QGraphicsView)
-        i = 0
-        current_scene = graphics_view.scene()
-        items = current_scene.items()
-        return len(items)
     def test_update_icon_image(self):
         current_file = os.path.realpath(__file__)
         current_directory = os.path.dirname(current_file)
@@ -227,7 +238,7 @@ class Work_space(QWidget):
 
             # Создаём и настраиваем тест
             tst = test.GraphicsTest(methodName='test_graphics_item_count')
-            tst.num_img = i  # <-- передаём сцену вручную
+            tst.num_img = i
 
             suite = unittest.TestSuite()
             suite.addTest(tst)

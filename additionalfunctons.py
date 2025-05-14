@@ -3,7 +3,8 @@ from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5.QtCore import QRectF
-from PyQt5.QtWidgets import (QMenu,QGraphicsRectItem)
+from PyQt5.QtWidgets import QMenu,QGraphicsRectItem,QApplication
+import Icon_modul as icon
 #перетаскивание картинки
 class DraggableLabel(QLabel):
     def __init__(self, pixmap):
@@ -16,11 +17,23 @@ class DraggableLabel(QLabel):
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.drag_start_position = event.pos()
-
+            '''
+            view = QApplication.focusWidget()
+            current_scene = view.scene()
+            active_item = current_scene.focusItem()
+            for item in self.list_items:
+                if isinstance(item, icon.LineConnector):
+                    k = 0
+                    list_itemsline = item.collidingItems()
+                    while k < len(list_itemsline):
+                        if list_itemsline[k] == active_item: current_scene.removeItem(item)
+                        k = k + 1
+            '''
     def mouseMoveEvent(self, event: QMouseEvent):
         if event.buttons() == Qt.LeftButton and self.drag_start_position:
             # Перемещаем метку относительно текущей позиции
             self.move(self.mapToParent(event.pos() - self.drag_start_position))
+
 
 #изменение имени вкладки
 class EditableTabBar(QTabBar):

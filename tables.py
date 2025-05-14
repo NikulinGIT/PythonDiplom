@@ -7,65 +7,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QPoint
 import os
 import sqlite3
-import unittest
+import openpyxl
 from PyQt5.QtWidgets import QApplication, QTableWidget
-import csv
 import pandas as pd
 import xlsxwriter
 
 app = QApplication([])  # Обязателен для создания виджетов в тестах
-'''
-class TestTableWidget(unittest.TestCase):
-    def setUp(self):
-        # Создание приложения PyQt для тестирования
-        self.app = QApplication(sys.argv)
-        self.window = QMainWindow()
 
-        # Создание таблицы и заполнение данными
-        self.table_widget = QTableWidget(self.window)
-        self.table_widget.setRowCount(3)  # 3 строки
-        self.table_widget.setColumnCount(3)  # 3 столбца
-        self.table_widget.setHorizontalHeaderLabels(["Имя", "Возраст", "профессия"])
-
-        data = [
-            ["Аня", "27", "врач"],
-            ["Катя", "44", "учитель"],
-            ["Саня", "65", "космонавт"]
-        ]
-        for row in range(len(data)):
-            for col in range(len(data[row])):
-                self.table_widget.setItem(row, col, QTableWidgetItem(data[row][col]))
-
-    def test_table_creation(self):
-        """Проверка, что таблица была создана с правильными размерами"""
-        self.assertEqual(self.table_widget.rowCount(), 3, "Количество строк должно быть 3")
-        self.assertEqual(self.table_widget.columnCount(), 3, "Количество столбцов должно быть 3")
-
-    def test_table_data(self):
-        """Проверка, что таблица правильно наполнилась данными"""
-        expected_data = [
-            ["Аня", "27", "врач"],
-            ["Катя", "44", "учитель"],
-            ["Саня", "65", "космонавт"]
-        ]
-
-        for row in range(3):
-            for col in range(3):
-                item = self.table_widget.item(row, col)
-                self.assertEqual(item.text(), expected_data[row][col], f"Неверное значение в ячейке {row},{col}")
-    def test_delete_cell(self):
-        """Проверка удаления содержимого ячейки"""
-        # До удаления содержимого ячейки, она должна быть заполнена
-        cell_item = self.table_widget.item(0, 0)
-        self.assertEqual(cell_item.text(), "Аня", "Содержимое ячейки должно быть 'Аня'")
-
-        # Удаляем содержимое ячейки (0, 0)
-        self.table_widget.setItem(0, 0, None)
-
-        # После удаления содержимого, ячейка должна быть пустой
-        cell_item = self.table_widget.item(0, 0)
-        self.assertIsNone(cell_item, "Ячейка должна быть пустой")
-'''
 class TableWidget(QTableWidget):
     def __init__(self, rows, columns):
         super().__init__(rows, columns)
@@ -293,29 +241,37 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(widget_devices, f"hand_devices")
         except:print('hand_device is empty')
     def update_current_table(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для загрузки", "", "CSV Files (*.csv)")
+        path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для загрузки", "", "Excel Files (*.xlsx *.xls)")
         if path:
-          df = pd.read_csv(path)
-          column_names = list(df.columns)
-          num_rows = df.shape[0]  # Количество строк
-          num_cols = df.shape[1]  # Количество столбцов
-          table = TableWidget(num_rows, num_cols)
-          table.setHorizontalHeaderLabels(column_names)
-          widget = QWidget()
-          layout = QVBoxLayout(widget)
-          layout.addWidget(table)
-          row_position = table.rowCount()
-          rows_as_lists = df.values.tolist()
-          for row in rows_as_lists:
-             i = 0
-             for column in row:
-               table.setItem(i, 0, QTableWidgetItem(str(column)))
-               i=i+1
-             row_position = table.rowCount()
-             table.insertRow(row_position)
-          self.tab_count += 1
-          filename = os.path.basename(path)
-          self.tabs.addTab(widget, filename)
+            try:
+                # Считываем Excel файл (автоматически определяет лист)
+                df = pd.read_excel(path)
+
+                column_names = list(df.columns)
+                num_rows = df.shape[0]
+                num_cols = df.shape[1]
+
+                # Создаем таблицу
+                table = TableWidget(num_rows, num_cols)
+                table.setHorizontalHeaderLabels(column_names)
+
+                # Заполняем таблицу
+                for row_idx, row in df.iterrows():
+                    for col_idx, value in enumerate(row):
+                        item = QTableWidgetItem(str(value))
+                        table.setItem(row_idx, col_idx, item)
+
+                # Упаковка в виджет + добавление на вкладку
+                widget = QWidget()
+                layout = QVBoxLayout(widget)
+                layout.addWidget(table)
+
+                filename = os.path.basename(path)
+                self.tabs.addTab(widget, filename)
+                self.tab_count += 1
+
+            except Exception as e:
+                print("Ошибка при загрузке Excel:", e)
     def save_current_table(self):
         # Открытие диалогового окна для выбора места сохранения
         current_widget = self.tabs.currentWidget()

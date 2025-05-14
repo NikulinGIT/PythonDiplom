@@ -1,13 +1,11 @@
-from PyQt5.QtWidgets import (
-    QApplication, QGraphicsView, QMenu, QGraphicsItemGroup,
-    QGraphicsPixmapItem, QGraphicsTextItem, QGraphicsRectItem, QGraphicsLineItem, QInputDialog, QAction
-)
+from PyQt5.QtWidgets import ( QGraphicsItemGroup,QGraphicsTextItem, QGraphicsLineItem, QInputDialog)
 from PyQt5.QtGui import QPixmap, QPen, QBrush
 from PyQt5.QtCore import QLineF, Qt
 from PyQt5.QtWidgets import (QMenu, QAction,QGraphicsView, QGraphicsRectItem, QApplication,QGraphicsPixmapItem)
 import requests
 import sqlite3
 import os
+
 class FramedImage(QGraphicsItemGroup):
     def __init__(self, pixmap_path, label_text):
         super().__init__()
@@ -219,8 +217,7 @@ class FramedImage(QGraphicsItemGroup):
                 items = active_item[0].childItems()
                 for item in items:
                     if isinstance(item, QGraphicsTextItem):
-                        text, ok = QInputDialog.getText(None, 'Переименование', 'Введите новое имя:',
-                                                        text=item.toPlainText())
+                        text, ok = QInputDialog.getText(None, 'Переименование', 'Введите новое имя:',text=item.toPlainText())
                         if ok:
                             old_name=item.toPlainText()
                             item.setPlainText(text)

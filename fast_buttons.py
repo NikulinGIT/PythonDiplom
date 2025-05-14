@@ -1,6 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTabWidget, QTextEdit, QPushButton, QListWidget, \
-    QHBoxLayout, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QTabWidget, QTextEdit, QPushButton, QListWidget, QFileDialog
 
 
 class TextEditorApp(QWidget):
@@ -68,11 +67,9 @@ class TextEditorApp(QWidget):
             self.version_list.addItem(text)
 
             # Открываем диалог для выбора пути сохранения
-            file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить текст в файл", "",
-                                                       "Text Files (*.txt);;All Files (*)")
+            file_name, _ = QFileDialog.getSaveFileName(self, "Сохранить текст в файл", "", "Text Files (*.txt);;All Files (*)")
             if file_name:
-                with open(file_name, 'w', encoding='utf-8') as file:
-                    file.write(text)
+                with open(file_name, 'w', encoding='utf-8') as file:file.write(text)
 
     def load_text(self):
         """Загружаем текст из файла."""
