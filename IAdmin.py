@@ -176,6 +176,7 @@ class Work_space(QWidget):
             self.background.setPos(0, 0)  # Сбрасываем позицию
 
     def update_icon_image(self):
+
         try:
             current_file = os.path.realpath(__file__)
             current_directory = os.path.dirname(current_file)
@@ -389,14 +390,19 @@ class MainWindow(QMainWindow):
         help_menu.addAction(about_action)
 
     def set_norm_mode(self):
-        self.NetworkScanner.set_save_mode(True)
-        self.nmap_type_scan_with_saving.setText("✓ Запуск Nmap с сохранением состояния")
-        self.nmap_type_scan_without_saving.setText("Запуск Nmap без сохранения состояния")
+        self.nmap_type_scan_with_saving.setText("✓ Nmap с сохранением состояния")
+        self.nmap_type_scan_without_saving.setText("Nmap без сохранения состояния")
 
     def set_save_mode(self):
-        self.NetworkScanner.set_save_mode(False)
-        self.nmap_type_scan_with_saving.setText("Запуск Nmap с сохранением состояния")
-        self.nmap_type_scan_without_saving.setText("✓ Запуск Nmap без сохранения состояния")
+        conn = sqlite3.connect('Device_parametres.db')
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS devices;")
+        cursor.execute("DROP TABLE IF EXISTS MAC;")
+        cursor.execute("DROP TABLE IF EXISTS Ports;")
+        conn.commit()
+        conn.close()
+        self.nmap_type_scan_with_saving.setText("Nmap с сохранением состояния")
+        self.nmap_type_scan_without_saving.setText("✓ Nmap без сохранения состояния")
     def show_about(self):
         QMessageBox.information(self, "О программе", "Пример меню-бара на PyQt.")
 

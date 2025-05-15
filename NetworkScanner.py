@@ -44,10 +44,6 @@ class NetworkScanner:
         '''создаем/подключаемся к базе данных'''
         conn = sqlite3.connect('Device_parametres.db')
         cursor = conn.cursor()
-        if self.save_mode == False:
-            cursor.execute("DROP TABLE IF EXISTS devices;")
-            cursor.execute("DROP TABLE IF EXISTS MAC;")
-            cursor.execute("DROP TABLE IF EXISTS Ports;")
 
         conn.execute("PRAGMA foreign_keys = ON")
         # Создаем основную таблицу devices
