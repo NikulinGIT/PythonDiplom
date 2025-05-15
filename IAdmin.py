@@ -146,10 +146,15 @@ class Work_space(QWidget):
          if graphics_view:
             current_scene = graphics_view.scene()
             items = current_scene.items(Qt.AscendingOrder)
-            background_item = items[-1] if items else None
-            current_scale = background_item.scale()
-            new_scale = current_scale * 1.1
-            background_item.setScale(new_scale)
+            i=0
+            while i<len(items):
+               if isinstance(items[i], QGraphicsPixmapItem):
+                   if not(i-1>-1 and isinstance(items[i-1], QGraphicsRectItem)):
+                      background_item = items[i]
+                      current_scale = background_item.scale()
+                      new_scale = current_scale * 1.1
+                      background_item.setScale(new_scale)
+               i=i+1
        except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить фоновое изображение")
 
     def zoom_out(self):
@@ -160,10 +165,15 @@ class Work_space(QWidget):
          if graphics_view:
             current_scene = graphics_view.scene()
             items = current_scene.items(Qt.AscendingOrder)
-            background_item = items[-1] if items else None
-            current_scale = background_item.scale()
-            new_scale = current_scale / 1.1
-            background_item.setScale(new_scale)
+            i=0
+            while i<len(items):
+               if isinstance(items[i], QGraphicsPixmapItem):
+                   if not(i-1>-1 and isinstance(items[i-1], QGraphicsRectItem)):
+                      background_item = items[i]
+                      current_scale = background_item.scale()
+                      new_scale = current_scale / 1.1
+                      background_item.setScale(new_scale)
+               i=i+1
        except:QMessageBox.warning(None, "Предупреждение", "Необходимо добавить фоновое изображение")
 
     def change_image(self):

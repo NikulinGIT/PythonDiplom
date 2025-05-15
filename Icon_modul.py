@@ -82,6 +82,7 @@ class FramedImage(QGraphicsItemGroup):
         scene = view.scene()
         self.list_items = scene.items()
         active_item = scene.focusItem()
+        print(active_item)
         self.list_addr=[]# список имен элементов
         List_frames=[]#список имен item
         list_action=[]#список элементов во вкладке
